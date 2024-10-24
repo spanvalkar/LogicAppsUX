@@ -31,6 +31,7 @@ import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useIntl } from 'react-intl';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
 export interface ChangeState {
   value: ValueSegment[];
@@ -173,12 +174,16 @@ export const BaseEditor = ({
   const TextPlugin = htmlEditor === 'rich-html' ? RichTextPlugin : PlainTextPlugin;
   const forwardSlashSnippet = '/';
 
+  const [editor] = useLexicalComposerContext();
+  const editorHasContent = !!(editor._rootElement?.textContent && editor._rootElement?.textContent.length > 0);
+  const tooltipVisible = isEditorFocused && !editorHasContent;
+
   return (
     <Tooltip
       relationship="label"
       positioning={'below-start'}
-      content={`Press ${forwardSlashSnippet} to insert dynamic value or expression`}
-      visible={isEditorFocused}
+      content={`Press '${forwardSlashSnippet}' to insert dynamic value or expression`}
+      visible={tooltipVisible}
     >
       <div>
         <div className={className ?? 'msla-editor-container'} id={editorId} ref={containerRef} data-automation-id={dataAutomationId}>
@@ -242,7 +247,7 @@ export const BaseEditor = ({
           {children}
           {tokens && isTokenPickerOpened ? getTokenPicker(editorId, labelId ?? '', tokenPickerMode, valueType) : null}
         </div>
-        {tokens && isEditorFocused && !isTokenPickerOpened
+        {tokens && isEditorFocused
           ? createPortal(<TokenPickerButton {...tokenPickerButtonProps} openTokenPicker={openTokenPicker} />, document.body)
           : null}
       </div>
